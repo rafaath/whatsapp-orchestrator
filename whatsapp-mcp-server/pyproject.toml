@@ -1,11 +1,11 @@
 [project]
 name = "whatsapp-mcp-server"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
+description = "Local WhatsApp MCP connector backed by whatsmeow"
+readme = "../README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "httpx>=0.28.1",
-    "mcp[cli]>=1.6.0",
-    "requests>=2.32.3",
+    "mcp>=2.3.0,<3",
+    "requests>=2.34.2,<3",
+    "websockets>=15,<17",
 ]

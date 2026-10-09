@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Correspondence | WhatsApp Control Desk</title>
+  <link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script>
+</head>
+<body>
+  <div id="login" class="login" hidden>
+    <div class="login-card"><span class="eyebrow">YOUR LOCAL WORKSPACE</span><h1>Correspondence.</h1>
+      <p>Open <strong>Start-ControlDesk.ps1</strong> to connect this browser to your private desk.</p>
+      <details><summary>Enter a local access key instead</summary><form id="login-form"><label>Access key<input id="access-key" type="password" autocomplete="off" required></label><button type="submit">Open my desk</button></form></details>
+      <p id="login-error" role="alert"></p>
+    </div>
+  </div>
+  <div id="app" class="app" hidden>
+    <aside class="sidebar">
+      <a class="wordmark" href="#overview"><span class="mark">c.</span><span>Correspondence<small>WhatsApp control desk</small></span></a>
+      <nav aria-label="Workspace"><button data-tab="overview" class="active">01 <span>Today</span></button><button data-tab="outreach">02 <span>Outreach review</span></button><button data-tab="schedule">03 <span>Scheduled messages</span></button><button data-tab="drafts">04 <span>Reply studio</span></button><button data-tab="connections">05 <span>Control chats</span></button><button data-tab="workflows">06 <span>Commands & workflows</span></button><button data-tab="context">07 <span>Business context</span></button><button data-tab="activity">08 <span>Activity</span></button></nav>
+      <div class="sidebar-foot"><span id="bridge-dot" class="dot"></span><span id="bridge-status">Connecting</span><small id="resource-status"></small></div>
+    </aside>
+    <main>
+      <header class="topbar"><div><span class="eyebrow" id="today"></span><span class="local-label">Private, on this computer</span></div><div class="header-actions"><button class="quiet" id="off-all">Stop forwarding</button><button class="outline" id="pause-all">Pause scheduled sends</button></div></header>
+      <div id="connection-banner" class="banner" hidden role="status"></div>
+      <section id="page-overview" class="page">
+        <div class="page-heading"><div><span class="eyebrow">A LITTLE MORE HEADSPACE</span><h1>Keep the conversation going.</h1><p>Your messages, drafts and phone controls, in one quiet place.</p></div><button data-go="schedule">Schedule a message <span aria-hidden="true">+</span></button></div>
+        <div class="metrics"><article><span>Up next</span><strong id="count-pending">0</strong><small>messages scheduled</small></article><article><span>Ready for your eye</span><strong id="count-drafts">0</strong><small>reply drafts</small></article><article><span>Connected to your thinking</span><strong id="count-relays">0</strong><small>chats forwarding to Codex</small></article></div>
+        <article class="panel outreach-shortcut"><div><span class="eyebrow">BEFORE THE FIRST HELLO</span><h2>Your outreach, ready to review.</h2><p>Researched introductions and follow-ups. Read the exact wording before deciding what happens next.</p></div><button class="outline" data-go="outreach">Open outreach review</button></article>
+        <div class="two-column"><article class="panel"><div class="panel-heading"><h2>The next conversation</h2><button class="text-button" data-go="schedule">View schedule</button></div><div id="up-next"></div></article><article class="panel tinted"><span class="eyebrow">YOUR PHONE, YOUR DESK</span><h2>A word opens the door.</h2><p id="alias-intro">Send pineapple in your self-chat to start forwarding messages to your selected Codex session.</p><div class="example"><span>You, in WhatsApp</span><code>mango Rohan | make it warmer</code><p>Get a considered draft using your context. Refine it until it sounds like you.</p></div><button class="outline" data-go="connections">Set up control chats</button></article></div>
+        <article class="panel"><div class="panel-heading"><h2>Needs your attention</h2><span class="muted">Clear outcomes, no guessing</span></div><div id="attention"></div></article>
+      </section>
+      <section id="page-outreach" class="page" hidden aria-labelledby="outreach-title">
+        <div class="page-heading"><div><span class="eyebrow">BEFORE THE FIRST HELLO</span><h1 id="outreach-title">Outreach review</h1><p>One person. The right words. A considered next step.</p></div><button class="outline" id="outreach-reload">Reload review</button></div>
+        <div class="outreach-notice"><strong>Review only. Nothing here sends or schedules.</strong><p>Wording approval is not send approval. Existing scheduled messages stay in their own section.</p></div>
+        <p id="outreach-snapshot" class="field-hint">Open a saved research snapshot to review your drafts.</p>
+        <div id="outreach-feedback" role="status" aria-live="polite"></div>
+        <div id="outreach-content" hidden>
+          <div id="outreach-filters" class="outreach-filters" role="group" aria-label="Filter outreach drafts"></div>
+          <div class="outreach-toolbar"><label for="outreach-search">Find a person or business<input id="outreach-search" type="search" placeholder="Search names or businesses..." autocomplete="off"></label><p id="outreach-results" role="status" aria-live="polite"></p></div>
+          <div id="outreach-workspace" class="outreach-workspace">
+            <div class="outreach-directory"><ol id="outreach-list" aria-label="Outreach contacts"></ol></div>
+            <article id="outreach-detail" class="panel outreach-detail" aria-label="Selected outreach draft"></article>
+          </div>
+        </div>
+      </section>
+      <section id="page-schedule" class="page" hidden>
+        <div class="page-heading"><div><span class="eyebrow">RIGHT WORDS. RIGHT TIME.</span><h1>Scheduled messages</h1><p>Choose exact contacts, review the message and set a local time.</p></div></div>
+        <div class="two-column compose"><form id="schedule-form" class="panel"><h2>Plan a conversation</h2>
+          <div id="schedule-picker" class="contact-picker"></div><div id="schedule-selected" class="chips"></div>
+          <label>Message<textarea id="schedule-message" rows="5" maxlength="8000" required placeholder="Write what you want to say..."></textarea></label><p class="field-hint">Use {{name}} for the contact's saved name. Review every personalized message below.</p>
+          <div class="form-row"><label>First send<input id="schedule-date" type="datetime-local" required></label><label>Timezone<input id="schedule-zone" value="Asia/Kolkata" required></label></div>
+          <div class="form-row"><label>Repeat<select id="schedule-repeat"><option value="once">Once</option><option value="daily">Every day</option><option value="weekdays">Weekdays</option><option value="weekly">Every week</option></select></label><label>End date (optional)<input id="schedule-until" type="date"></label></div>
+          <label class="check"><input type="checkbox" id="schedule-reply" checked> Stop this schedule if the contact replies</label>
+          <p class="field-hint" id="spacing-hint"></p><button type="submit">Review recipients & times</button>
+        </form><article class="panel review-panel"><span class="eyebrow">BEFORE IT LEAVES YOUR DESK</span><h2>Review the send</h2><div id="schedule-preview"><p class="empty">Your exact recipients, messages and send times will appear here.</p></div><button id="schedule-confirm" hidden>Confirm & schedule</button></article></div>
+        <article class="panel"><div class="panel-heading"><h2>Your schedule</h2><select id="schedule-filter" aria-label="Filter schedules"><option value="open">Upcoming & needs attention</option><option value="all">All recent schedules</option></select></div><div id="schedule-list"></div></article>
+      </section>
+      <section id="page-drafts" class="page" hidden>
+        <div class="page-heading"><div><span class="eyebrow">SOUNDS LIKE YOU</span><h1>Reply studio</h1><p>Think through a reply, keep the context, make it better.</p></div></div>
+        <form id="draft-form" class="panel"><div id="draft-picker" class="contact-picker"></div><p id="draft-recipient" class="selected-label">Choose a contact to start.</p><label>Your direction<textarea id="draft-feedback" rows="3" placeholder="What would make this the right reply? Leave blank for a first draft."></textarea></label><button type="submit">Create a reply draft</button><p class="field-hint">Uses up to 30 recent messages, your business brief, contact notes and the previous draft. Drafting alone never sends to the contact.</p></form>
+        <div id="draft-jobs"></div><div id="draft-list" class="draft-grid"></div>
+      </section>
+      <section id="page-connections" class="page" hidden>
+        <div class="page-heading"><div><span class="eyebrow">YOUR SHORTCUT TO THE DESK</span><h1>Control chats</h1><p>Choose which chats can reach Codex and what each one can do.</p></div></div>
+        <form id="session-form" class="panel"><h2>The conversation to continue</h2><label>Codex session ID<input id="target-thread" placeholder="Paste a Codex conversation ID" spellcheck="false"></label><div class="form-row"><button type="submit">Save session</button><button type="button" class="outline" id="check-codex">Check connection</button></div><p id="session-detail" class="field-hint">Forwarded messages appear in this exact conversation, using its existing permissions. New sessions keep the saved business context for drafting.</p></form>
+        <div id="source-list" class="source-grid"></div>
+        <form id="source-form" class="panel"><h2>Add a chat</h2><label>What should happen here?<select id="source-kind"><option value="group">My private group controls Codex</option><option value="watch">A contact's new messages create drafts for me</option><option value="delegate">Give a contact a limited text assistant</option></select></label><p id="source-help" class="field-hint">The group must contain only you. Membership is checked again before commands and replies.</p><div id="source-picker" class="contact-picker"></div><p id="source-selected" class="selected-label">Choose an exact chat.</p><button type="submit">Enable this chat</button></form>
+      </section>
+      <section id="page-workflows" class="page" hidden>
+        <div class="page-heading"><div><span class="eyebrow">MAKE IT YOUR OWN</span><h1>Commands & workflows</h1><p>Words are shortcuts. The behavior behind them is configurable.</p></div></div>
+        <form id="aliases-form" class="panel"><h2>Your command words</h2><div id="alias-rows"></div><div class="form-row"><button type="button" class="outline" id="add-alias">Add a word</button><button type="submit">Save commands</button></div><p class="field-hint">pc: off, pc: help, pc: status, pc: select, pc: send and pc: cancel are always available.</p></form>
+        <form id="workflow-form" class="panel"><h2>A reusable thinking task</h2><label>Keyword<input id="workflow-alias" pattern="[a-z][a-z0-9_-]{0,31}" placeholder="e.g. polish" required></label><label>Instructions<textarea id="workflow-instructions" rows="5" placeholder="Rewrite my text in my business voice. Keep facts and commitments unchanged. Return only the revised version." required></textarea></label><button type="submit">Save workflow</button><p class="field-hint">Text workflows return their result to the requesting chat. Use Codex forwarding for tasks that need computer tools.</p></form><div id="workflow-list"></div>
+      </section>
+      <section id="page-context" class="page" hidden>
+        <div class="page-heading"><div><span class="eyebrow">THE PART YOU SHOULDN'T REPEAT</span><h1>Business context</h1><p>A brief that stays with you, whichever Codex conversation you use next.</p></div></div>
+        <form id="context-form" class="panel"><label>Your business brief<textarea id="business-profile" rows="10" maxlength="24000" placeholder="What you offer, who your customers are, your tone, current priorities, pricing you are comfortable quoting, and commitments you do not want invented."></textarea></label><p class="field-hint">If you enable a limited assistant for another person, it also uses this shared brief. Keep private notes in the contact field below.</p><div class="form-row"><label>Timezone<input id="context-zone" required></label><label>Draft model (optional)<input id="context-model" placeholder="Use the model configured in Codex"></label></div><div class="form-row"><label>Seconds between scheduled sends<input id="context-spacing" type="number" min="5" max="3600"></label><label>Late-send grace period (seconds)<input id="context-grace" type="number" min="0" max="86400"></label></div><div class="form-row"><label>Command lifetime (seconds)<input id="context-ttl" type="number" min="30" max="600"></label><label>Forwarding idle timeout (seconds)<input id="context-idle" type="number" min="60" max="14400"></label></div><button type="submit">Save context & preferences</button></form>
+        <form id="contact-form" class="panel"><h2>Remember something about a contact</h2><div id="notes-picker" class="contact-picker"></div><p id="notes-selected" class="selected-label">Choose a contact.</p><label>Private notes<textarea id="contact-notes" rows="4" maxlength="12000" placeholder="Their business, what you discussed, promises already made, useful background..."></textarea></label><label class="check"><input id="contact-suppressed" type="checkbox"> Do not send automated messages to this contact</label><label>Reason (optional)<input id="contact-reason" maxlength="500"></label><button type="submit">Save contact context</button></form><div id="suppression-list"></div>
+      </section>
+      <section id="page-activity" class="page" hidden>
+        <div class="page-heading"><div><span class="eyebrow">A CLEAR PAPER TRAIL</span><h1>Activity</h1><p>Requests, results, and anything that needs a decision.</p></div></div><div id="approval-list"></div><article class="panel"><h2>Recent work</h2><div id="job-list"></div></article><article class="panel"><h2>Desk history</h2><div id="activity-list"></div></article>
+      </section>
+      <footer>Messages run while this computer is awake, connected, and the bridge is running. An acknowledgment means WhatsApp accepted the message; it does not mean it was read.</footer>
+    </main>
+  </div>
+  <dialog id="confirm-dialog"><form method="dialog"><span class="eyebrow">SEND THIS MESSAGE</span><h2 id="confirm-title"></h2><pre id="confirm-body"></pre><div class="form-row"><button value="cancel" class="outline">Keep as draft</button value="send">Send to this contact</button></div></form></dialog>
+  <dialog id="edit-dialog"><form id="edit-form"><h2>Reschedule this message</h2><p id="edit-zone"></p><label>New local date & time<input id="edit-date" type="datetime-local" required></label><label>Message<textarea id="edit-message" rows="5" required></textarea></label><p class="field-hint">Saved as paused so you can review it before resuming.</p><div class="form-row"><button type="button" class="outline" id="edit-close">Cancel</button><button type="submit">Save changes</button></div></form></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

@@ -1,183 +1,128 @@
-# WhatsApp MCP Server
+# WhatsApp Control Desk for Codex
 
-This is a Model Context Protocol (MCP) server for WhatsApp.
+A local, single-account WhatsApp connector with a browser desk for schedules,
+reply drafts, outreach review, and phone-to-Codex commands. Built on
+[lharries/whatsapp-mcp](https://github.com/lharries/whatsapp-mcp) and
+[tulir/whatsmeow](https://github.com/tulir/whatsmeow).
 
-With this you can search and read your personal Whatsapp messages (including images, videos, documents, and audio messages), search your contacts and send messages to either individuals or groups. You can also send media files including images, videos, documents, and audio messages.
+**Each person clones the source, installs dependencies, and pairs their own
+phone. Never share or copy another person's `runtime/` folder.**
 
-It connects to your **personal WhatsApp account** directly via the Whatsapp web multidevice API (using the [whatsmeow](https://github.com/tulir/whatsmeow) library). All your messages are stored locally in a SQLite database and only sent to an LLM (such as Claude) when the agent accesses them through tools (which you control).
+## Get started
 
-Here's an example of what you can do when it's connected to Claude.
+Supported setup: Windows 10/11 with Ubuntu in WSL2. Shell scripts also support
+a Linux checkout; the PowerShell launchers are Windows-specific.
 
-![WhatsApp MCP](./example-use.png)
+1. Clone this repository into your own folder.
+2. Install the WSL prerequisites in [LOCAL_SETUP.md](LOCAL_SETUP.md).
+3. From your clone in PowerShell, install dependencies and build locally:
 
-> To get updates on this and other projects I work on [enter your email here](https://docs.google.com/forms/d/1rTF9wMBTN0vPfzWuQa2BjfGKdKIpTbyeKxhPMcEzgyI/preview)
-
-> *Caution:* as with many MCP servers, the WhatsApp MCP is subject to [the lethal trifecta](https://simonwillison.net/2025/Jun/16/the-lethal-trifecta/). This means that project injection could lead to private data exfiltration.
-
-## Installation
-
-### Prerequisites
-
-- Go
-- Python 3.6+
-- Anthropic Claude Desktop app (or Cursor)
-- UV (Python package manager), install with `curl -LsSf https://astral.sh/uv/install.sh | sh`
-- FFmpeg (_optional_) - Only needed for audio messages. If you want to send audio files as playable WhatsApp voice messages, they must be in `.ogg` Opus format. With FFmpeg installed, the MCP server will automatically convert non-Opus audio files. Without FFmpeg, you can still send raw audio files using the `send_file` tool.
-
-### Steps
-
-1. **Clone this repository**
-
-   ```bash
-   git clone https://github.com/lharries/whatsapp-mcp.git
-   cd whatsapp-mcp
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Setup-WhatsApp.ps1
    ```
 
-2. **Run the WhatsApp bridge**
+   Setup does **not** start servers, pair a phone, register Codex or enable autostart.
 
-   Navigate to the whatsapp-bridge directory and run the Go application:
+4. Start the bridge yourself and scan the QR with your own phone:
 
-   ```bash
-   cd whatsapp-bridge
-   go run main.go
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Start-WhatsApp.ps1
    ```
 
-   The first time you run it, you will be prompted to scan a QR code. Scan the QR code with your WhatsApp mobile app to authenticate.
+   Use **WhatsApp > Linked Devices > Link a device**. A saved valid session
+   reconnects without a QR. Keep this terminal open.
 
-   After approximately 20 days, you will might need to re-authenticate.
+5. In another PowerShell window in the same folder, open the desk:
 
-3. **Connect to the MCP server**
-
-   Copy the below json with the appropriate {{PATH}} values:
-
-   ```json
-   {
-     "mcpServers": {
-       "whatsapp": {
-         "command": "{{PATH_TO_UV}}", // Run `which uv` and place the output here
-         "args": [
-           "--directory",
-           "{{PATH_TO_SRC}}/whatsapp-mcp/whatsapp-mcp-server", // cd into the repo, run `pwd` and enter the output here + "/whatsapp-mcp-server"
-           "run",
-           "main.py"
-         ]
-       }
-     }
-   }
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Start-ControlDesk.ps1
    ```
 
-   For **Claude**, save this as `claude_desktop_config.json` in your Claude Desktop configuration directory at:
+   It reuses the bridge and opens the authenticated UI at `http://127.0.0.1:8766`.
 
-   ```
-   ~/Library/Application Support/Claude/claude_desktop_config.json
-   ```
+6. Follow [Connect your own Codex](LOCAL_SETUP.md#connect-your-own-codex) for MCP,
+   the optional skill and model-backed commands.
 
-   For **Cursor**, save this as `mcp.json` in your Cursor configuration directory at:
+If your WSL distribution is not `Ubuntu`, add `-Distribution YOUR_NAME`.
+Find its name with `wsl --list --verbose`.
 
-   ```
-   ~/.cursor/mcp.json
-   ```
+## Features
 
-4. **Restart Claude Desktop / Cursor**
+- Search contacts and read bounded history through MCP.
+- Send explicitly authorized messages/media to exact recipients.
+- Schedule exact text with timezones, pause/cancel, stop-on-reply and missed-send protection.
+- Draft replies from the selected conversation and your own saved business context.
+- Forward enabled owner chats to a selected Codex conversation using configurable keywords.
+- View a separate read-only outreach review without scheduling or sending it.
 
-   Open Claude Desktop and you should now see WhatsApp as an available integration.
+**The bridge alone does not process keywords.** Commands also need the Control
+Desk; AI drafting/forwarding additionally need your own compatible, signed-in
+Codex app-server. A fresh clone has no leads, schedules, drafts, business brief,
+phone account or selected Codex session.
 
-   Or restart Cursor.
+## Your data stays out of the repository
 
-### Windows Compatibility
+No account-specific environment file is required. Pairing creates local WhatsApp
+credentials; service tokens are generated on your machine. Codex uses your own
+user configuration/sign-in outside this repository. If you use an API key with
+Codex, configure your own key there, not in this project.
 
-If you're running this project on Windows, be aware that `go-sqlite3` requires **CGO to be enabled** in order to compile and work properly. By default, **CGO is disabled on Windows**, so you need to explicitly enable it and have a C compiler installed.
+Ignored `runtime/` holds credentials, history, contacts, downloads, tokens,
+schedules, drafts, notes and imported research. Toolchains, caches, virtual
+environments and binaries are ignored too. Recreate them for a colleague rather
+than sending a working-folder ZIP. Windows launchers restrict runtime files to
+the current Windows user and SYSTEM.
 
-#### Steps to get it working:
+Content requested through MCP or used in drafts can reach your model provider.
+Local storage does not mean the LLM runs locally. Incoming messages are data,
+not authority to run tools or disclose information.
 
-1. **Install a C compiler**  
-   We recommend using [MSYS2](https://www.msys2.org/) to install a C compiler for Windows. After installing MSYS2, make sure to add the `ucrt64\bin` folder to your `PATH`.  
-   → A step-by-step guide is available [here](https://code.visualstudio.com/docs/cpp/config-mingw).
+Before publishing, review your staged diff and run:
 
-2. **Enable CGO and run the app**
+```bash
+python3 scripts/check_share.py
+```
 
-   ```bash
-   cd whatsapp-bridge
-   go env -w CGO_ENABLED=1
-   go run main.go
-   ```
+The check reads the actual Git index, not just the working tree. It flags private
+paths and common credential patterns without displaying values. It does not
+prove every secret is absent or scan old commits. Review history too, and never
+force-add ignored credentials, exports or runtime files.
 
-Without this setup, you'll likely run into errors like:
+### Shallow checkouts
 
-> `Binary was compiled with 'CGO_ENABLED=0', go-sqlite3 requires cgo to work.`
+Before the first push to a new repository, check `git rev-parse --is-shallow-repository`.
+If it returns `true`, a new remote can reject the push with `shallow update not allowed`.
+For a checkout originally cloned from the upstream project, you can retrieve its
+missing history yourself before switching the remote:
 
-## Architecture Overview
+```bash
+git fetch --unshallow https://github.com/lharries/whatsapp-mcp.git
+```
 
-This application consists of two main components:
+Review that history too. The setup and sharing checks do not fetch, rewrite,
+commit or push Git history.
 
-1. **Go WhatsApp Bridge** (`whatsapp-bridge/`): A Go application that connects to WhatsApp's web API, handles authentication via QR code, and stores message history in SQLite. It serves as the bridge between WhatsApp and the MCP server.
+## Limits and development
 
-2. **Python MCP Server** (`whatsapp-mcp-server/`): A Python server implementing the Model Context Protocol (MCP), which provides standardized tools for Claude to interact with WhatsApp data and send/receive messages.
+Services are loopback-only and support one local account on the configured ports.
+The PC, WSL, network and services must be running for schedules and commands.
+Missed messages are not burst-sent after outages; uncertain sends are not retried.
+An acknowledgment is not a delivery/read receipt.
 
-### Data Storage
+Codex app-server integration is experimental and may need compatibility work
+after updates. whatsmeow is unofficial: protocol changes and account restrictions
+remain possible. Respect consent and opt-outs, not just technical rate limits.
 
-- All message history is stored in a SQLite database within the `whatsapp-bridge/store/` directory
-- The database maintains tables for chats and messages
-- Messages are indexed for efficient searching and retrieval
+Read [LOCAL_SETUP.md](LOCAL_SETUP.md), [architecture](docs/CONTROL_DESIGN.md) and
+[agent rules](AGENTS.md). Checks that do not start servers:
 
-## Usage
+```bash
+.venv/bin/python scripts/check_offline.py
+node --check control/web/app.js
+```
 
-Once connected, you can interact with your WhatsApp contacts through Claude, leveraging Claude's AI capabilities in your WhatsApp conversations.
+Browser, HTTP and MCP smoke tests are separate and owner-operated.
 
-### MCP Tools
+## License
 
-Claude can access the following tools to interact with WhatsApp:
-
-- **search_contacts**: Search for contacts by name or phone number
-- **list_messages**: Retrieve messages with optional filters and context
-- **list_chats**: List available chats with metadata
-- **get_chat**: Get information about a specific chat
-- **get_direct_chat_by_contact**: Find a direct chat with a specific contact
-- **get_contact_chats**: List all chats involving a specific contact
-- **get_last_interaction**: Get the most recent message with a contact
-- **get_message_context**: Retrieve context around a specific message
-- **send_message**: Send a WhatsApp message to a specified phone number or group JID
-- **send_file**: Send a file (image, video, raw audio, document) to a specified recipient
-- **send_audio_message**: Send an audio file as a WhatsApp voice message (requires the file to be an .ogg opus file or ffmpeg must be installed)
-- **download_media**: Download media from a WhatsApp message and get the local file path
-
-### Media Handling Features
-
-The MCP server supports both sending and receiving various media types:
-
-#### Media Sending
-
-You can send various media types to your WhatsApp contacts:
-
-- **Images, Videos, Documents**: Use the `send_file` tool to share any supported media type.
-- **Voice Messages**: Use the `send_audio_message` tool to send audio files as playable WhatsApp voice messages.
-  - For optimal compatibility, audio files should be in `.ogg` Opus format.
-  - With FFmpeg installed, the system will automatically convert other audio formats (MP3, WAV, etc.) to the required format.
-  - Without FFmpeg, you can still send raw audio files using the `send_file` tool, but they won't appear as playable voice messages.
-
-#### Media Downloading
-
-By default, just the metadata of the media is stored in the local database. The message will indicate that media was sent. To access this media you need to use the download_media tool which takes the `message_id` and `chat_jid` (which are shown when printing messages containing the meda), this downloads the media and then returns the file path which can be then opened or passed to another tool.
-
-## Technical Details
-
-1. Claude sends requests to the Python MCP server
-2. The MCP server queries the Go bridge for WhatsApp data or directly to the SQLite database
-3. The Go accesses the WhatsApp API and keeps the SQLite database up to date
-4. Data flows back through the chain to Claude
-5. When sending messages, the request flows from Claude through the MCP server to the Go bridge and to WhatsApp
-
-## Troubleshooting
-
-- If you encounter permission issues when running uv, you may need to add it to your PATH or use the full path to the executable.
-- Make sure both the Go application and the Python server are running for the integration to work properly.
-
-### Authentication Issues
-
-- **QR Code Not Displaying**: If the QR code doesn't appear, try restarting the authentication script. If issues persist, check if your terminal supports displaying QR codes.
-- **WhatsApp Already Logged In**: If your session is already active, the Go bridge will automatically reconnect without showing a QR code.
-- **Device Limit Reached**: WhatsApp limits the number of linked devices. If you reach this limit, you'll need to remove an existing device from WhatsApp on your phone (Settings > Linked Devices).
-- **No Messages Loading**: After initial authentication, it can take several minutes for your message history to load, especially if you have many chats.
-- **WhatsApp Out of Sync**: If your WhatsApp messages get out of sync with the bridge, delete both database files (`whatsapp-bridge/store/messages.db` and `whatsapp-bridge/store/whatsapp.db`) and restart the bridge to re-authenticate.
-
-For additional Claude Desktop integration troubleshooting, see the [MCP documentation](https://modelcontextprotocol.io/quickstart/server#claude-for-desktop-integration-issues). The documentation includes helpful tips for checking logs and resolving common issues.
+MIT. Original attribution is retained in [LICENSE](LICENSE).
